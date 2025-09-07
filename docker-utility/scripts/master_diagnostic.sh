@@ -141,6 +141,8 @@ run_diagnostic "volume_test.sh" "VOLUME MOUNT TEST"
 run_diagnostic "list_volumes.sh" "VOLUME FILE LISTING"
 run_diagnostic "vpc_test.sh" "VPC CONNECTIVITY TEST"
 run_diagnostic "network_diag.sh" "NETWORK DIAGNOSTICS"
+run_diagnostic "vpc_egress_firewall_analysis.sh" "VPC EGRESS FIREWALL ANALYSIS"
+run_diagnostic "quick_firewall_test.sh" "QUICK FIREWALL TEST"
 run_diagnostic "system_info.sh" "SYSTEM INFORMATION"
 run_diagnostic "multi_command_test.sh" "MULTI-COMMAND TEST"
 

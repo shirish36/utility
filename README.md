@@ -256,6 +256,87 @@ The Cloud Run Jobs are configured to run in VPC `vpc-core-dev` with subnet `app-
 
 **Note**: Cloud Run Jobs use internal IP addresses in the 169.254.x.x range even when attached to a VPC. This is normal behavior - the VPC attachment provides access to internal resources while maintaining Cloud Run's serverless networking model.
 
+### VPC Egress Firewall Analysis
+
+The `vpc_egress_firewall_analysis.sh` script provides comprehensive analysis of traffic flow through egress firewalls when accessing Google APIs like Cloud Storage.
+
+#### End-to-End Traffic Flow
+
+```
+Cloud Run Job → VPC (app-dev subnet) → Egress Firewall → Google APIs
+                     ↓
+               Cloud Storage (storage.googleapis.com)
+```
+
+#### Firewall Configuration
+
+- **Target**: `storage.googleapis.com`
+- **Allowed CIDR**: `10.10.0.0/22` (includes your subnet `10.10.2.0/24`)
+- **Protocol**: TCP/443 (HTTPS)
+- **Direction**: Egress
+
+#### Running the Analysis
+
+```bash
+# Analyze VPC egress firewall configuration and connectivity
+/workspace/scripts/vpc_egress_firewall_analysis.sh
+```
+
+This script will:
+- Analyze VPC routing configuration
+- Validate egress firewall rules
+- Test Cloud Storage connectivity
+- Debug network path issues
+- Provide troubleshooting commands
+
+#### Common Firewall Issues
+
+1. **Source IP not in allowed CIDR**
+   - Your subnet `10.10.2.0/24` must be within `10.10.0.0/22`
+   - Cloud Run uses internal IPs (169.254.x.x) but traffic is NAT'd
+
+2. **Destination not matching**
+   - Ensure requests go to `storage.googleapis.com`
+   - Check for hardcoded IPs or alternative endpoints
+
+3. **Protocol/Port issues**
+   - Cloud Storage requires TCP/443 (HTTPS)
+   - Ensure SSL/TLS is properly configured
+
+#### Debugging Commands
+
+```bash
+# Test basic connectivity
+gcloud run jobs execute utility-job \
+  --command "curl -I https://storage.googleapis.com" \
+  --region us-central1
+
+# Debug DNS resolution
+gcloud run jobs execute utility-job \
+  --command "nslookup storage.googleapis.com" \
+  --region us-central1
+
+# Check firewall rules
+gcloud compute firewall-rules list \
+  --filter='direction=EGRESS' \
+  --format='table(name,network,direction,priority,sourceRanges,targetTags)'
+```
+
+#### Quick Firewall Test
+
+For rapid validation of egress firewall connectivity:
+
+```bash
+# Quick test of Cloud Storage access through firewall
+/workspace/scripts/quick_firewall_test.sh
+```
+
+This script performs:
+- HTTPS connectivity test to `storage.googleapis.com`
+- DNS resolution validation
+- Network path verification
+- SSL certificate validation
+
 ### Volume Mounts
 
 The Docker image includes support for volume mounts at `/data/in` and `/data/out`:
@@ -550,7 +631,8 @@ To run a diagnostic script in Cloud Run Jobs:
  
  T h i s   s c r i p t   p r o v i d e s   c o m p r e h e n s i v e   a n a l y s i s   o f : 
  
- # # # #   * * =��  T r a f f i c   F l o w   A n a l y s i s : * * 
+ # # # #   * * =�
+�  T r a f f i c   F l o w   A n a l y s i s : * * 
  -   * * C l o u d   S t o r a g e   T r a f f i c * * :   G C S   F U S E   o p e r a t i o n s   a n d   A P I   c a l l s 
  -   * * C l o u d   S Q L   T r a f f i c * * :   D a t a b a s e   c o n n e c t i o n   p a t t e r n s   a n d   p r o t o c o l s 
  -   * * V P C   F l o w   L o g s * * :   N e t w o r k   f l o w   m o n i t o r i n g   s e t u p 
@@ -664,5 +746,6 @@ To run a diagnostic script in Cloud Run Jobs:
      - - n o t i f i c a t i o n - c h a n n e l s = y o u r - c h a n n e l 
  ` ` ` 
  
- T h i s   c o m p r e h e n s i v e   n e t w o r k   t r a f f i c   a n a l y s i s   w i l l   g i v e   y o u   c o m p l e t e   v i s i b i l i t y   i n t o   y o u r   V P C   t r a f f i c   f l o w s   t o   C l o u d   S t o r a g e   a n d   C l o u d   S Q L !  
+ T h i s   c o m p r e h e n s i v e   n e t w o r k   t r a f f i c   a n a l y s i s   w i l l   g i v e   y o u   c o m p l e t e   v i s i b i l i t y   i n t o   y o u r   V P C   t r a f f i c   f l o w s   t o   C l o u d   S t o r a g e   a n d   C l o u d   S Q L ! 
+ 
  
