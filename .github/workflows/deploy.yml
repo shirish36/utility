@@ -73,8 +73,8 @@ jobs:
           --image ${{ env.GCR_IMAGE }}:${{ github.sha }} \
           --region ${{ env.REGION }} \
           --set-env-vars TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }} \
-          --command ${{ github.event.inputs.command || '/bin/bash' }} \
-          --args ${{ github.event.inputs.args || '-c,echo Hello from Cloud Run Jobs' }} \
+          --command ${{ github.event.inputs.command || 'curl' }} \
+          --args ${{ github.event.inputs.args || '-l,https://google.com' }} \
           --cpu 1 \
           --memory 512Mi \
           --max-retries 0 \
