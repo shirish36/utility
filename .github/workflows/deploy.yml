@@ -12,9 +12,9 @@ on:
         required: true
         default: 'utility-job'
       command:
-        description: 'Container command to run (e.g., curl, /bin/bash, /workspace/scripts/network_test.sh)'
+        description: 'Container command to run (e.g., sh, /bin/bash, /workspace/scripts/network_test.sh)'
         required: false
-        default: 'curl'
+        default: 'sh'
       args:
         description: 'Command arguments (e.g., -I for curl)'
         required: false
@@ -77,7 +77,9 @@ jobs:
           --image ${{ env.GCR_IMAGE }}:${{ github.sha }} \
           --region ${{ env.REGION }} \
           --set-env-vars TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }} \
-          --command ${{ github.event.inputs.command || 'curl' }} \
+          --command ${{ github.event.inputs.command || 'sh' }} \
+          --args -c \
+          --args curl \
           --args ${{ github.event.inputs.args || '-I' }} \
           --args ${{ github.event.inputs.url || 'https://google.com' }} \
           --cpu 1 \
