@@ -75,8 +75,6 @@ jobs:
           --region ${{ env.REGION }} \
           --set-env-vars TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }} \
           --command ${{ github.event.inputs.command || 'sh' }} \
-          --args -c \
-          --args curl \
           --args ${{ github.event.inputs.args || '-c "curl -I https://google.com && echo \"Test completed successfully\""' }} \
           --cpu 1 \
           --memory 512Mi \
