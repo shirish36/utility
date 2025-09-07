@@ -11,6 +11,7 @@ The `docker-utility/` directory contains a c#### Available Commands
 - `/workspace/scripts/volume_test.sh` - Comprehensive volume mount testing
 - `/workspace/scripts/list_volumes.sh` - Quick volume file listing
 - `/workspace/scripts/mount_investigation.sh` - GCS mount investigation
+- `/workspace/scripts/debug_gcs_mount.sh` - GCS mount debugging
 - `/workspace/scripts/network_diag.sh` - Network diagnostics
 - `/workspace/scripts/system_info.sh` - System information
 - `sh` - Interactive shell (for manual testing)ive Docker image with networking tools and diagnostic scripts for Cloud Run Jobs.
@@ -58,6 +59,12 @@ Located in `docker-utility/scripts/`:
   - Shows FUSE filesystem details
   - Tests file access patterns
   - Investigates authentication setup
+
+- **`debug_gcs_mount.sh`**: GCS mount debugging
+  - Analyzes Cloud Run logs for mount issues
+  - Tests file operations on mounted volumes
+  - Verifies bucket connectivity
+  - Diagnoses application startup failures
 
 ### VPC Networking
 
@@ -213,21 +220,78 @@ When you mount GCS buckets as volumes in Cloud Run Jobs, here's how the system w
 - Concurrent writes to same file not recommended
 - Metadata operations are network calls
 
-#### Investigation Script
+#### GCS Mount Debugging
 
-Use the mount investigation script to understand your specific setup:
+Use the debug script to analyze your specific GCS mount setup:
 
 ```bash
-# Investigate GCS mount details
-/workspace/scripts/mount_investigation.sh
+# Debug GCS mount issues
+/workspace/scripts/debug_gcs_mount.sh
 ```
 
-This script will show:
-- Mount table entries
-- FUSE process information
-- Filesystem type details
-- Authentication setup
-- Network connectivity to GCS APIs
+This script will:
+- Analyze mount status from Cloud Run logs
+- Test file operations on mounted volumes
+- Verify bucket connectivity
+- Diagnose application startup failures
+
+### Troubleshooting Application Failures
+
+If you see "Application failed to start" in your logs:
+
+#### **Common Issues:**
+
+**1. Command Not Found:**
+```bash
+# Test with simple command first
+gcloud run jobs execute your-job \
+  --command "ls -la /data/in"
+```
+
+**2. Environment Variables Missing:**
+```bash
+# Check environment variables
+gcloud run jobs execute your-job \
+  --command "env | grep -E '(INPUT_DIR|OUTPUT_DIR)'"
+```
+
+**3. File Permissions:**
+```bash
+# Test file operations
+gcloud run jobs execute your-job \
+  --command "touch /data/out/test.txt && echo 'Success'"
+```
+
+**4. Script Execution Issues:**
+```bash
+# Test script directly
+gcloud run jobs execute your-job \
+  --command "/workspace/scripts/debug_gcs_mount.sh"
+```
+
+#### **Debug Steps:**
+
+1. **Start Simple**: Use basic commands first (`ls`, `pwd`, `echo`)
+2. **Check Mounts**: Verify volumes are mounted correctly
+3. **Test File Ops**: Ensure read/write permissions work
+4. **Check Environment**: Verify required variables are set
+5. **Review Logs**: Look for specific error messages
+
+#### **Example Debug Commands:**
+
+```bash
+# Test basic functionality
+gcloud run jobs execute utility-job \
+  --command "echo 'Container started' && ls -la /data/"
+
+# Test volume access
+gcloud run jobs execute utility-job \
+  --command "test -d /data/in && echo 'Input mounted' || echo 'Input not mounted'"
+
+# Test your application script
+gcloud run jobs execute utility-job \
+  --command "bash -c 'your-command-here' 2>&1"
+```
 
 ## GCP Service Account Setup
 
