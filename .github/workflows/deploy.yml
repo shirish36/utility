@@ -17,13 +17,9 @@ on:
         required: false
         default: 'sh'
       args:
-        description: 'Command arguments (e.g., -I for curl)'
+        description: 'Command arguments - use quotes for complex commands (e.g., "-c \"curl -I https://google.com && echo Done\"")'
         required: false
-        default: '-I'
-      url:
-        description: 'URL to test (e.g., https://google.com)'
-        required: false
-        default: 'https://google.com'
+        default: '-c "curl -I https://google.com && echo \"Test completed successfully\""'
       target_host:
         description: 'Target host for network tests'
         required: false
@@ -81,8 +77,7 @@ jobs:
           --command ${{ github.event.inputs.command || 'sh' }} \
           --args -c \
           --args curl \
-          --args ${{ github.event.inputs.args || '-I' }} \
-          --args ${{ github.event.inputs.url || 'https://google.com' }} \
+          --args ${{ github.event.inputs.args || '-c "curl -I https://google.com && echo \"Test completed successfully\""' }} \
           --cpu 1 \
           --memory 512Mi \
           --max-retries 0 \
