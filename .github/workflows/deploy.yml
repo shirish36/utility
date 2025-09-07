@@ -1,0 +1,101 @@
+name: Deploy Utility Docker to Cloud Run Jobs
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docker-utility/**'
+  workflow_dispatch:
+    inputs:
+      job_name:
+        description: 'Cloud Run Job name'
+        required: true
+        default: 'utility-job'
+      command:
+        description: 'Container command to run'
+        required: false
+        default: '/bin/bash'
+      args:
+        description: 'Command arguments'
+        required: false
+        default: '-c "echo Hello from Cloud Run Jobs"'
+      target_host:
+        description: 'Target host for network tests'
+        required: false
+        default: 'google.com'
+
+env:
+  GCP_PROJECT_ID: gifted-palace-468618-q5
+  GCP_SA_EMAIL: github-actions@gifted-palace-468618-q5.iam.gserviceaccount.com
+  GCR_IMAGE: gcr.io/gifted-palace-468618-q5/utility-image
+  REGION: us-central1
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker to use gcloud as a credential helper
+      run: |
+        gcloud auth configure-docker --quiet
+
+    - name: Build Docker image
+      run: |
+        cd docker-utility
+        docker build -t ${{ env.GCR_IMAGE }}:${{ github.sha }} .
+        docker tag ${{ env.GCR_IMAGE }}:${{ github.sha }} ${{ env.GCR_IMAGE }}:latest
+
+    - name: Push Docker image to GCR
+      run: |
+        docker push ${{ env.GCR_IMAGE }}:${{ github.sha }}
+        docker push ${{ env.GCR_IMAGE }}:latest
+
+    - name: Deploy to Cloud Run Jobs
+      run: |
+        # Delete existing job if it exists
+        gcloud run jobs delete ${{ github.event.inputs.job_name || 'utility-job' }} \
+          --region ${{ env.REGION }} \
+          --quiet || true
+
+        # Create new job
+        gcloud run jobs create ${{ github.event.inputs.job_name || 'utility-job' }} \
+          --image ${{ env.GCR_IMAGE }}:${{ github.sha }} \
+          --region ${{ env.REGION }} \
+          --set-env-vars TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }} \
+          --command ${{ github.event.inputs.command || '/bin/bash' }} \
+          --args ${{ github.event.inputs.args || '-c "echo Hello from Cloud Run Jobs"' }} \
+          --cpu 1 \
+          --memory 512Mi \
+          --max-retries 0 \
+          --service-account ${{ env.GCP_SA_EMAIL }}
+
+    - name: Execute Cloud Run Job (optional)
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        gcloud run jobs execute ${{ github.event.inputs.job_name || 'utility-job' }} \
+          --region ${{ env.REGION }} \
+          --wait
+
+    - name: Get job execution logs
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        EXECUTION_ID=$(gcloud run jobs executions list \
+          --region ${{ env.REGION }} \
+          --filter="job=${{ github.event.inputs.job_name || 'utility-job' }}" \
+          --limit=1 \
+          --format="value(name)")
+        if [ ! -z "$EXECUTION_ID" ]; then
+          gcloud run jobs executions logs read $EXECUTION_ID \
+            --region ${{ env.REGION }}
+        fi

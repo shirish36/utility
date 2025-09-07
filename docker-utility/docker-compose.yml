@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  utility:
+    build: .
+    container_name: utility-container
+    volumes:
+      - .:/workspace
+      - /tmp:/tmp
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - utility-network
+
+networks:
+  utility-network:
+    driver: bridge
