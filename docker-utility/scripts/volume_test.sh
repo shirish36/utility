@@ -70,5 +70,34 @@ echo "   INPUT_DIR: ${INPUT_DIR:-Not set}"
 echo "   OUTPUT_DIR: ${OUTPUT_DIR:-Not set}"
 echo
 
+# Advanced mount point verification
+echo "8. Advanced mount verification:"
+echo "   Mount points:"
+mount | grep -E "/data/(in|out)" || echo "   No /data volume mounts found in mount table"
+echo
+
+echo "   File system types:"
+if [ -d "/data/in" ]; then
+    df -T /data/in 2>/dev/null | tail -1 | awk '{print "   /data/in: " $2}' || echo "   Unable to determine /data/in filesystem type"
+fi
+if [ -d "/data/out" ]; then
+    df -T /data/out 2>/dev/null | tail -1 | awk '{print "   /data/out: " $2}' || echo "   Unable to determine /data/out filesystem type"
+fi
+echo
+
+# Test file metadata
+echo "9. File metadata test:"
+if [ -f "$TEST_FILE_IN" ]; then
+    echo "   Test file metadata (/data/in/test_input.txt):"
+    ls -la "$TEST_FILE_IN"
+    echo "   File size: $(stat -c%s "$TEST_FILE_IN" 2>/dev/null || echo "unknown") bytes"
+    echo "   Last modified: $(stat -c%y "$TEST_FILE_IN" 2>/dev/null || echo "unknown")"
+fi
+if [ -f "$TEST_FILE_OUT" ]; then
+    echo "   Copied file metadata (/data/out/test_output.txt):"
+    ls -la "$TEST_FILE_OUT"
+fi
+echo
+
 echo "=== Volume Mount Test Complete ==="
 echo "If all tests show ✓, your volume mounts are working correctly!"

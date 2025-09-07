@@ -36,6 +36,13 @@ Located in `docker-utility/scripts/`:
   - Tests `/data/in` and `/data/out` directory access
   - Verifies file read/write permissions
   - Demonstrates volume mount functionality
+  - Shows mount information and filesystem details
+
+- **`list_volumes.sh`**: Quick volume file listing
+  - Lists all files in mounted volumes
+  - Shows permissions and ownership
+  - Displays file and directory counts
+  - Provides manual testing commands
 
 ### VPC Networking
 
@@ -83,6 +90,58 @@ This script will:
 - Test read/write permissions
 - Demonstrate file operations between volumes
 - Show disk usage information
+
+#### Quick Volume Listing
+
+Use the `list_volumes.sh` script for a quick overview:
+
+```bash
+# Quick file listing
+/workspace/scripts/list_volumes.sh
+```
+
+This provides:
+- File and directory counts
+- Permissions and ownership details
+- Mount information
+- Manual testing commands
+
+#### Manual Volume Verification
+
+You can also verify volumes manually using these commands:
+
+```bash
+# Check if directories exist
+ls -la /data/in
+ls -la /data/out
+
+# Test write permissions
+touch /data/in/test.txt
+touch /data/out/test.txt
+
+# Check mount information
+mount | grep data
+df -h /data/in /data/out
+
+# List all files recursively
+find /data/in -type f
+find /data/out -type f
+```
+
+#### Volume Mount Indicators
+
+**✅ Volume is properly mounted if:**
+- Directories `/data/in` and `/data/out` exist
+- You can create and modify files in both directories
+- `mount` command shows volume mounts
+- `df -h` shows disk usage for mounted volumes
+- File operations (read/write/copy) work successfully
+
+**❌ Volume mount issues if:**
+- Directories don't exist or are empty
+- Permission denied errors when accessing files
+- No mount entries in `mount` output
+- File operations fail
 
 ## GCP Service Account Setup
 
@@ -134,7 +193,8 @@ To run a diagnostic script in Cloud Run Jobs:
 
 - `/workspace/scripts/multi_command_test.sh` - Full container diagnostics
 - `/workspace/scripts/vpc_test.sh` - VPC connectivity testing
-- `/workspace/scripts/volume_test.sh` - Volume mount testing
+- `/workspace/scripts/volume_test.sh` - Comprehensive volume mount testing
+- `/workspace/scripts/list_volumes.sh` - Quick volume file listing
 - `/workspace/scripts/network_diag.sh` - Network diagnostics
 - `/workspace/scripts/system_info.sh` - System information
 - `sh` - Interactive shell (for manual testing)
