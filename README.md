@@ -162,6 +162,12 @@ This will:
 
 Located in `docker-utility/scripts/`:
 
+- **`master_diagnostic.sh`**: 🏆 **MASTER DIAGNOSTIC** - Complete health check
+  - Runs all diagnostic scripts in sequence
+  - Provides comprehensive system overview
+  - Shows volume mount status and network connectivity
+  - One-stop diagnostic solution
+
 - **`multi_command_test.sh`**: Comprehensive container diagnostics
   - Network interface inspection
   - IP address and routing information
@@ -208,6 +214,35 @@ Located in `docker-utility/scripts/`:
   - Tests basic container functionality
   - Verifies environment and resources
   - Isolates application-specific problems
+
+- **`system_info.sh`**: System information
+  - Container resource usage
+  - Process information
+  - File system details
+
+#### 🏆 Master Diagnostic Script
+
+For the most comprehensive diagnostic experience, use the **master diagnostic script**:
+
+```bash
+# Run complete diagnostic suite
+/workspace/scripts/master_diagnostic.sh
+```
+
+**What it provides:**
+- 📊 **System Overview**: Complete environment and resource summary
+- 💾 **Volume Status**: Detailed mount information and file counts
+- 🌐 **Network Status**: Connectivity and DNS resolution tests
+- 🔧 **All Individual Tests**: Runs every diagnostic script automatically
+- 📋 **Executive Summary**: Clear pass/fail indicators and recommendations
+
+**Perfect for:**
+- ✅ **First-time debugging**: Get complete picture quickly
+- ✅ **Comprehensive health checks**: Verify all systems working
+- ✅ **Documentation**: Generate detailed diagnostic reports
+- ✅ **Troubleshooting**: Identify issues across all components
+
+**Runtime**: ~2-3 minutes (runs all diagnostics in sequence)
 
 ### VPC Networking
 
@@ -484,10 +519,14 @@ To run a diagnostic script in Cloud Run Jobs:
 
 #### Available Commands
 
+- `/workspace/scripts/master_diagnostic.sh` - 🏆 Complete diagnostic suite
 - `/workspace/scripts/multi_command_test.sh` - Full container diagnostics
 - `/workspace/scripts/vpc_test.sh` - VPC connectivity testing
 - `/workspace/scripts/volume_test.sh` - Comprehensive volume mount testing
 - `/workspace/scripts/list_volumes.sh` - Quick volume file listing
+- `/workspace/scripts/mount_investigation.sh` - GCS mount investigation
+- `/workspace/scripts/debug_gcs_mount.sh` - GCS mount debugging
+- `/workspace/scripts/debug_app_failure.sh` - Application failure debugging
 - `/workspace/scripts/network_diag.sh` - Network diagnostics
 - `/workspace/scripts/system_info.sh` - System information
 - `sh` - Interactive shell (for manual testing)

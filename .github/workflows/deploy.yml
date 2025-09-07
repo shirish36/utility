@@ -13,7 +13,7 @@ on:
         required: true
         default: 'utility-job'
       command:
-        description: 'Container command to run (e.g., sh, /bin/bash, /workspace/scripts/multi_command_test.sh, /workspace/scripts/vpc_test.sh, /workspace/scripts/volume_test.sh, /workspace/scripts/list_volumes.sh, /workspace/scripts/mount_investigation.sh, /workspace/scripts/debug_gcs_mount.sh, /workspace/scripts/debug_app_failure.sh)'
+        description: 'Container command to run (e.g., sh, /bin/bash, /workspace/scripts/master_diagnostic.sh, /workspace/scripts/multi_command_test.sh, /workspace/scripts/vpc_test.sh, /workspace/scripts/volume_test.sh, /workspace/scripts/list_volumes.sh, /workspace/scripts/mount_investigation.sh, /workspace/scripts/debug_gcs_mount.sh, /workspace/scripts/debug_app_failure.sh)'
         required: false
         default: 'sh'
       args:
