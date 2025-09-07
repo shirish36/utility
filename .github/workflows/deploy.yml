@@ -12,13 +12,13 @@ on:
         required: true
         default: 'utility-job'
       command:
-        description: 'Container command to run'
+        description: 'Container command to run (e.g., curl, /bin/bash, /workspace/scripts/network_test.sh)'
         required: false
-        default: '/bin/bash'
+        default: 'curl'
       args:
-        description: 'Command arguments'
+        description: 'Command arguments (e.g., -l,https://google.com or example.com)'
         required: false
-        default: '-c "echo Hello from Cloud Run Jobs"'
+        default: '-l,https://google.com'
       target_host:
         description: 'Target host for network tests'
         required: false
