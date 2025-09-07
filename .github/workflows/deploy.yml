@@ -74,7 +74,7 @@ jobs:
           --region ${{ env.REGION }} \
           --set-env-vars TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }} \
           --command ${{ github.event.inputs.command || '/bin/bash' }} \
-          --args ${{ github.event.inputs.args || '-c "echo Hello from Cloud Run Jobs"' }} \
+          --args ${{ github.event.inputs.args || '-c,echo Hello from Cloud Run Jobs' }} \
           --cpu 1 \
           --memory 512Mi \
           --max-retries 0 \
