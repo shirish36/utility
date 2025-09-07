@@ -6,12 +6,149 @@ This repository contains utility tools and Docker images for various testing and
 
 The `docker-utility/` directory contains a c#### Available Commands
 
-- `/workspace/scripts/multi_command_test.sh` - Full container diagnostics
-- `/workspace/scripts/vpc_test.sh` - VPC connectivity testing
+- `/workspace/scripts/multi_command_test.sh` - Full container #### Application Failure Debugging
+
+Use the comprehensive debug script for systematic troubleshooting:
+
+```bash
+# Debug application startup failures
+/workspace/scripts/debug_app_failure.sh
+```
+
+This script tests:
+- Container health and environment
+- Volume mount accessibility
+- Script availability and permissions
+- Basic command functionality
+- Network connectivity
+- System resource availability
+
+### Step-by-Step Application Debugging
+
+#### **Phase 1: Basic Container Health**
+```bash
+# Test if container starts at all
+gcloud run jobs execute utility-job \
+  --command "echo 'Container started successfully'"
+```
+
+#### **Phase 2: Environment Verification**
+```bash
+# Check environment setup
+gcloud run jobs execute utility-job \
+  --command "/workspace/scripts/debug_app_failure.sh"
+```
+
+#### **Phase 3: Command Isolation**
+```bash
+# Test your command components separately
+gcloud run jobs execute utility-job \
+  --command "which your-command"  # Check if command exists
+
+gcloud run jobs execute utility-job \
+  --command "your-command --help"  # Test basic functionality
+```
+
+#### **Phase 4: Full Command Test**
+```bash
+# Test your complete command with error output
+gcloud run jobs execute utility-job \
+  --command "bash -c 'your-full-command' 2>&1"
+```
+
+### Common Application Failure Patterns
+
+#### **Pattern 1: Command Not Found**
+**Symptoms:** `exec: command not found`
+**Debug:**
+```bash
+gcloud run jobs execute utility-job \
+  --command "which your-command || echo 'Command not found in PATH'"
+```
+
+#### **Pattern 2: Missing Files/Directories**
+**Symptoms:** `No such file or directory`
+**Debug:**
+```bash
+gcloud run jobs execute utility-job \
+  --command "ls -la /path/to/expected/file"
+```
+
+#### **Pattern 3: Permission Issues**
+**Symptoms:** `Permission denied`
+**Debug:**
+```bash
+gcloud run jobs execute utility-job \
+  --command "ls -la /path/to/file && whoami && id"
+```
+
+#### **Pattern 4: Environment Variables**
+**Symptoms:** Application can't find configuration
+**Debug:**
+```bash
+gcloud run jobs execute utility-job \
+  --command "env | grep -E '(your|variables|here)'"
+```
+
+#### **Pattern 5: Working Directory Issues**
+**Symptoms:** Files not found in expected location
+**Debug:**
+```bash
+gcloud run jobs execute utility-job \
+  --command "pwd && ls -la && echo 'Working dir contents above'"
+```
+
+### Advanced Debugging Techniques
+
+#### **Capture Full Error Output:**
+```bash
+gcloud run jobs execute utility-job \
+  --command "bash -x your-script.sh 2>&1"  # Show execution trace
+```
+
+#### **Test with Simplified Command:**
+```bash
+# Start with minimal working command, then add complexity
+gcloud run jobs execute utility-job \
+  --command "echo 'Step 1' && ls /data/in && echo 'Step 2 complete'"
+```
+
+#### **Check Exit Codes:**
+```bash
+gcloud run jobs execute utility-job \
+  --command "your-command; echo 'Exit code: $?'"
+```
+
+### Debugging Checklist
+
+- [ ] **Container starts**: Basic echo command works
+- [ ] **Environment set**: Required variables are available
+- [ ] **Files accessible**: Input/output directories mounted
+- [ ] **Command exists**: Executable is in PATH or full path provided
+- [ ] **Permissions correct**: User can read/write required files
+- [ ] **Working directory**: Command runs from expected location
+- [ ] **Arguments valid**: Command syntax and parameters are correct
+- [ ] **Dependencies met**: All required libraries/tools available
+
+### Getting Detailed Logs
+
+For maximum debugging information, use:
+
+```bash
+gcloud run jobs execute utility-job \
+  --command "bash -x /workspace/scripts/your-script.sh" \
+  --args "2>&1 | tee /data/out/debug.log"
+```
+
+This will:
+- Show execution trace (`-x`)
+- Capture all output (`2>&1`)
+- Save logs to mounted volume (`tee /data/out/debug.log`)`/workspace/scripts/vpc_test.sh` - VPC connectivity testing
 - `/workspace/scripts/volume_test.sh` - Comprehensive volume mount testing
 - `/workspace/scripts/list_volumes.sh` - Quick volume file listing
 - `/workspace/scripts/mount_investigation.sh` - GCS mount investigation
 - `/workspace/scripts/debug_gcs_mount.sh` - GCS mount debugging
+- `/workspace/scripts/debug_app_failure.sh` - Application failure debugging
 - `/workspace/scripts/network_diag.sh` - Network diagnostics
 - `/workspace/scripts/system_info.sh` - System information
 - `sh` - Interactive shell (for manual testing)ive Docker image with networking tools and diagnostic scripts for Cloud Run Jobs.
@@ -65,6 +202,12 @@ Located in `docker-utility/scripts/`:
   - Tests file operations on mounted volumes
   - Verifies bucket connectivity
   - Diagnoses application startup failures
+
+- **`debug_app_failure.sh`**: Application failure debugging
+  - Systematic debugging of container startup issues
+  - Tests basic container functionality
+  - Verifies environment and resources
+  - Isolates application-specific problems
 
 ### VPC Networking
 
