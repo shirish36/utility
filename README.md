@@ -260,13 +260,22 @@ The Cloud Run Jobs are configured to run in VPC `vpc-core-dev` with subnet `app-
 
 The `vpc_egress_firewall_analysis.sh` script provides comprehensive analysis of traffic flow through egress firewalls when accessing Google APIs like Cloud Storage.
 
-#### End-to-End Traffic Flow
+#### End-to-End Traffic Flow with NAT
 
 ```
-Cloud Run Job → VPC (app-dev subnet) → Egress Firewall → Google APIs
-                     ↓
-               Cloud Storage (storage.googleapis.com)
+Cloud Run Job → NAT Translation → VPC (app-dev subnet) → Egress Firewall → Google APIs
+     ↓                ↓                    ↓                        ↓
+169.254.x.x    →  10.10.2.x      →   10.10.2.0/24     →   storage.googleapis.com
 ```
+
+#### NAT (Network Address Translation) Behavior
+
+**Cloud Run Jobs use NAT when connecting through VPC:**
+
+1. **Internal IP**: Cloud Run containers use `169.254.x.x` internal IPs
+2. **NAT Translation**: When "Route all traffic to VPC" is enabled, internal IPs are translated to VPC subnet IPs (`10.10.2.x`)
+3. **Firewall Evaluation**: The egress firewall sees the NAT'd VPC subnet IP, not the internal IP
+4. **Traffic Flow**: `169.254.x.x` → `10.10.2.x` → Firewall check → `storage.googleapis.com`
 
 #### Firewall Configuration
 
@@ -274,6 +283,19 @@ Cloud Run Job → VPC (app-dev subnet) → Egress Firewall → Google APIs
 - **Allowed CIDR**: `10.10.0.0/22` (includes your subnet `10.10.2.0/24`)
 - **Protocol**: TCP/443 (HTTPS)
 - **Direction**: Egress
+
+#### Running NAT Analysis
+
+```bash
+# Analyze NAT behavior in Cloud Run Jobs
+/workspace/scripts/nat_analysis.sh
+```
+
+This script will:
+- Show internal vs external IP addresses
+- Demonstrate NAT translation process
+- Test connectivity with detailed logging
+- Explain firewall-NAT interaction
 
 #### Running the Analysis
 
