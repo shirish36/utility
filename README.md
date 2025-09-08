@@ -375,6 +375,91 @@ This guide covers:
 - **Log queries**: Ready-to-use filter expressions
 - **Troubleshooting**: How to diagnose issues using logs
 
+#### Ready-to-use Cloud Logging queries (VPC traffic)
+
+Use these in Logs Explorer to inspect traffic from your VPC/subnet. Replace values if needed.
+
+All VPC traffic from subnet `app-dev` in `us-central1`:
+
+```
+resource.type="gce_subnetwork"
+resource.labels.subnetwork_name="app-dev"
+resource.labels.region="us-central1"
+logName="projects/gifted-palace-468618-q5/logs/compute.googleapis.com%2Fvpc_flows"
+```
+
+Egress-only traffic:
+
+```
+resource.type="gce_subnetwork"
+resource.labels.subnetwork_name="app-dev"
+resource.labels.region="us-central1"
+logName="projects/gifted-palace-468618-q5/logs/compute.googleapis.com%2Fvpc_flows"
+jsonPayload.connection.direction="EGRESS"
+```
+
+Traffic to Google APIs (HTTPS on 443):
+
+```
+resource.type="gce_subnetwork"
+resource.labels.subnetwork_name="app-dev"
+resource.labels.region="us-central1"
+logName="projects/gifted-palace-468618-q5/logs/compute.googleapis.com%2Fvpc_flows"
+jsonPayload.connection.direction="EGRESS"
+jsonPayload.connection.dest_port=443
+```
+
+Traffic to Private Google Access VIPs (if using restricted/private googleapis):
+
+```
+resource.type="gce_subnetwork"
+resource.labels.subnetwork_name="app-dev"
+resource.labels.region="us-central1"
+logName="projects/gifted-palace-468618-q5/logs/compute.googleapis.com%2Fvpc_flows"
+jsonPayload.connection.direction="EGRESS"
+(jsonPayload.connection.dest_ip:"199.36.153." OR jsonPayload.connection.dest_ip:"199.36.153.4" OR jsonPayload.connection.dest_ip:"199.36.153.8")
+```
+
+Broad Google front-end ranges (approximate; adjust as needed):
+
+```
+resource.type="gce_subnetwork"
+resource.labels.subnetwork_name="app-dev"
+resource.labels.region="us-central1"
+logName="projects/gifted-palace-468618-q5/logs/compute.googleapis.com%2Fvpc_flows"
+jsonPayload.connection.direction="EGRESS"
+(jsonPayload.connection.dest_ip:"142.250." OR jsonPayload.connection.dest_ip:"172.217." OR jsonPayload.connection.dest_ip:"216.58.")
+```
+
+Firewall decisions (ALLOW/DENY):
+
+```
+resource.type="gce_firewall_rule"
+logName="projects/gifted-palace-468618-q5/logs/compute.googleapis.com%2Ffirewall"
+```
+
+Only DENIED egress traffic:
+
+```
+resource.type="gce_firewall_rule"
+logName="projects/gifted-palace-468618-q5/logs/compute.googleapis.com%2Ffirewall"
+jsonPayload.connection.direction="EGRESS"
+jsonPayload.disposition="DENIED"
+```
+
+DNS query logs (optional; enable DNS logging first):
+
+```
+resource.type="dns_query"
+logName="projects/gifted-palace-468618-q5/logs/dns.googleapis.com%2Fqueries"
+jsonPayload.queryName="storage.googleapis.com."
+```
+
+Tips:
+- In Logs Explorer, use Aggregate by → `jsonPayload.connection.dest_ip` or `dest_port`.
+- Set a narrow time range for faster results (e.g., Last 1 hour).
+- Ensure VPC Flow Logs are enabled on subnet `app-dev`.
+
 ### Volume Mounts
 
 The Docker image includes support for volume mounts at `/data/in` and `/data/out`:
