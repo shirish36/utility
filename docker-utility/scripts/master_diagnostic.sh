@@ -144,6 +144,7 @@ run_diagnostic "network_diag.sh" "NETWORK DIAGNOSTICS"
 run_diagnostic "vpc_egress_firewall_analysis.sh" "VPC EGRESS FIREWALL ANALYSIS"
 run_diagnostic "nat_analysis.sh" "NAT ANALYSIS"
 run_diagnostic "quick_firewall_test.sh" "QUICK FIREWALL TEST"
+run_diagnostic "cloud_logging_guide.sh" "CLOUD LOGGING GUIDE"
 run_diagnostic "system_info.sh" "SYSTEM INFORMATION"
 run_diagnostic "multi_command_test.sh" "MULTI-COMMAND TEST"
 

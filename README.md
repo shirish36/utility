@@ -359,6 +359,22 @@ This script performs:
 - Network path verification
 - SSL certificate validation
 
+#### Cloud Logging Guide
+
+Access comprehensive logging information for all diagnostic activities:
+
+```bash
+# View all logging locations and queries
+/workspace/scripts/cloud_logging_guide.sh
+```
+
+This guide covers:
+- **Cloud Run Jobs logs**: Execution output and errors
+- **VPC Flow Logs**: Network traffic patterns and NAT behavior
+- **Firewall Logs**: Rule evaluations and traffic decisions
+- **Log queries**: Ready-to-use filter expressions
+- **Troubleshooting**: How to diagnose issues using logs
+
 ### Volume Mounts
 
 The Docker image includes support for volume mounts at `/data/in` and `/data/out`:
