@@ -250,8 +250,51 @@ test_connectivity_with_logging() {
     echo
 }
 
-# Function to analyze firewall impact on NAT
-analyze_firewall_nat_interaction() {
+# Function to clarify Cloud NAT vs VPC NAT
+clarify_nat_types() {
+    echo "=================================================================================="
+    echo "🔄 CLOUD NAT vs VPC NAT - CLARIFICATION"
+    echo "=================================================================================="
+
+    echo "1. NAT Types in Google Cloud:"
+    echo "   • Cloud NAT: Google Cloud service for managed NAT"
+    echo "   • VPC NAT: Automatic NAT at VPC boundary (what Cloud Run uses)"
+    echo
+
+    echo "2. Cloud Run Jobs NAT Behavior:"
+    echo "   • Type: VPC NAT (automatic, no configuration needed)"
+    echo "   • Location: VPC subnet boundary"
+    echo "   • Trigger: 'Route all traffic to VPC' enabled"
+    echo "   • Source: Cloud Run internal IPs (169.254.x.x)"
+    echo "   • Target: VPC subnet IPs (10.10.2.x)"
+    echo
+
+    echo "3. Do You Need Cloud NAT Service?"
+    echo "   ❌ NO - Cloud Run Jobs do NOT require Cloud NAT"
+    echo "   ✅ VPC NAT happens automatically"
+    echo
+
+    echo "4. When Cloud NAT IS Needed:"
+    echo "   • Private GKE clusters accessing internet"
+    echo "   • VM instances in private subnets"
+    echo "   • Resources without public IPs"
+    echo "   • NOT for Cloud Run Jobs with VPC routing"
+    echo
+
+    echo "5. Cloud Run Jobs Configuration:"
+    echo "   • VPC: vpc-core-dev ✅"
+    echo "   • Subnet: app-dev (10.10.2.0/24) ✅"
+    echo "   • Route all traffic to VPC: ENABLED ✅"
+    echo "   • Cloud NAT: NOT REQUIRED ❌"
+    echo
+
+    echo "6. NAT Flow Summary:"
+    echo "   Cloud Run Job (169.254.x.x) → VPC Boundary → NAT → 10.10.2.x → Internet"
+    echo "                                      ↑"
+    echo "                            Automatic VPC NAT"
+    echo "                            (No Cloud NAT needed)"
+    echo
+}
     echo "=================================================================================="
     echo "🔥 FIREWALL & NAT INTERACTION ANALYSIS"
     echo "=================================================================================="
@@ -334,6 +377,7 @@ echo
 test_volume_mounts
 analyze_ip_addresses
 test_external_ip_visibility
+clarify_nat_types
 demonstrate_nat_translation
 test_connectivity_with_logging
 analyze_firewall_nat_interaction
@@ -357,6 +401,8 @@ echo "1. NAT translates internal Cloud Run IPs to VPC subnet IPs"
 echo "2. Firewall evaluates traffic based on NAT'd source IP"
 echo "3. Without NAT, firewall rules would not work with Cloud Run"
 echo "4. NAT is essential for VPC routing functionality"
+echo "5. Cloud NAT service is NOT required for Cloud Run Jobs"
+echo "6. VPC NAT happens automatically at subnet boundary"
 echo
 echo "🛠️ Use the troubleshooting commands above to verify NAT behavior."
 echo "=================================================================================="
