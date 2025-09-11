@@ -80,6 +80,13 @@ jobs:
 
     - name: Deploy to Cloud Run Jobs
       run: |
+        ARGS_INPUT='${{ github.event.inputs.args }}'
+        ARGS_FLAG=()
+        if [[ -n "$ARGS_INPUT" ]]; then
+          ARGS_FLAG+=(--args)
+          ARGS_FLAG+=("$ARGS_INPUT")
+        fi
+
         # Delete existing job if it exists
         gcloud run jobs delete ${{ github.event.inputs.job_name || 'utility-job' }} \
           --region ${{ env.REGION }} \
@@ -91,7 +98,7 @@ jobs:
           --region ${{ env.REGION }} \
           --set-env-vars TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }},TARGET_DEST=${{ github.event.inputs.target_dest || 'storage.googleapis.com' }} \
           --command ${{ github.event.inputs.command || 'sh' }} \
-          --args ${{ github.event.inputs.args || '' }} \
+          "${ARGS_FLAG[@]}" \
           --cpu 1 \
           --memory 512Mi \
           --max-retries 0 \
