@@ -51,4 +51,4 @@ RUN chmod +x /workspace/scripts/*.sh \
 WORKDIR /workspace
 
 # Default command (can be overridden in Cloud Run)
-CMD ["/bin/bash"]
+CMD ["net-all"]
