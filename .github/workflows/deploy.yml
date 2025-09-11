@@ -13,19 +13,24 @@ on:
         required: true
         default: 'utility-job'
       command:
-        description: 'Container command to run (e.g., sh, /bin/bash, /workspace/scripts/master_diagnostic.sh, /workspace/scripts/network_traffic_analysis.sh, /workspace/scripts/vpc_egress_firewall_analysis.sh, /workspace/scripts/nat_analysis.sh, /workspace/scripts/nat_network_analysis.sh, /workspace/scripts/cloud_logging_guide.sh, /workspace/scripts/multi_command_test.sh, /workspace/scripts/vpc_test.sh, /workspace/scripts/volume_test.sh, /workspace/scripts/list_volumes.sh, /workspace/scripts/mount_investigation.sh, /workspace/scripts/debug_gcs_mount.sh, /workspace/scripts/debug_app_failure.sh)'
+        description: 'Container command to run (e.g., net-all, net-info, net-check, net-egress, net-path, sh)'
         required: false
-        default: 'sh'
+        default: 'net-all'
       args:
         description: 'Command arguments - use quotes for complex commands (e.g., "-c \"curl -I https://google.com && echo Done\"")'
         required: false
-        default: '-c "curl -I https://google.com && echo \"Test completed successfully\""'
+        default: ''
       target_host:
         description: 'Target host for network tests'
         required: false
         default: 'google.com'
+      target_dest:
+        description: 'Target destination for path/firewall checks'
+        required: false
+        default: 'storage.googleapis.com'
 
 env:
+  # Defaults (will be overridden dynamically from secrets.GCP_SA_KEY below)
   GCP_PROJECT_ID: gifted-palace-468618-q5
   GCP_SA_EMAIL: github-actions@gifted-palace-468618-q5.iam.gserviceaccount.com
   GCR_IMAGE: gcr.io/gifted-palace-468618-q5/utility-image
@@ -44,11 +49,22 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+    - name: Derive project settings from SA key
+      run: |
+        PROJECT_ID=$(echo '${{ secrets.GCP_SA_KEY }}' | jq -r .project_id)
+        SA_EMAIL=$(echo '${{ secrets.GCP_SA_KEY }}' | jq -r .client_email)
+        echo "GCP_PROJECT_ID=$PROJECT_ID" >> "$GITHUB_ENV"
+        echo "GCP_SA_EMAIL=$SA_EMAIL" >> "$GITHUB_ENV"
+        echo "GCR_IMAGE=gcr.io/$PROJECT_ID/utility-image" >> "$GITHUB_ENV"
+
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.GCP_PROJECT_ID }}
 
-    - name: Configure Docker to use gcloud as a credential helper
+    - name: Configure gcloud and Docker
       run: |
+        gcloud config set project "$GCP_PROJECT_ID"
         gcloud auth configure-docker --quiet
 
     - name: Build Docker image
@@ -73,9 +89,9 @@ jobs:
         gcloud run jobs create ${{ github.event.inputs.job_name || 'utility-job' }} \
           --image ${{ env.GCR_IMAGE }}:${{ github.sha }} \
           --region ${{ env.REGION }} \
-          --set-env-vars TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }} \
+          --set-env-vars TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }},TARGET_DEST=${{ github.event.inputs.target_dest || 'storage.googleapis.com' }} \
           --command ${{ github.event.inputs.command || 'sh' }} \
-          --args ${{ github.event.inputs.args || '-c "curl -I https://google.com && echo \"Test completed successfully\""' }} \
+          --args ${{ github.event.inputs.args || '' }} \
           --cpu 1 \
           --memory 512Mi \
           --max-retries 0 \
