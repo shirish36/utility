@@ -1,25 +1,24 @@
-FROM alpine:latest
+FROM debian:stable-slim
 
-# Install utility packages
-RUN apk update && apk add --no-cache \
+# Install networking utilities (Debian-based for richer tooling)
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
     curl \
     wget \
-    bind-tools \
-    iputils \
+    dnsutils \
+    iproute2 \
+    iputils-ping \
     traceroute \
     openssh-client \
-    python3 \
-    py3-pip \
-    git \
-    vim \
-    nano \
-    bash \
-    jq \
-    tree \
-    htop \
     netcat-openbsd \
     tcpdump \
-    && rm -rf /var/cache/apk/*
+    mtr-tiny \
+    jq \
+    bash \
+    procps \
+    net-tools \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create data directories for volume mounts
 RUN mkdir -p /data/in /data/out && \
@@ -33,13 +32,20 @@ ENV OUTPUT_FILE=output.txt
 ENV INPUT_DIR=/data/in
 ENV OUTPUT_DIR=/data/out
 
-# Copy scripts and make them executable
-COPY scripts/ /workspace/scripts/
+# Copy only the new network-focused scripts and make them executable
+RUN mkdir -p /workspace/scripts
+COPY scripts/00_net_info.sh /workspace/scripts/
+COPY scripts/10_connectivity_check.sh /workspace/scripts/
+COPY scripts/20_external_ip_check.sh /workspace/scripts/
+COPY scripts/30_firewall_path_check.sh /workspace/scripts/
+COPY scripts/net_all.sh /workspace/scripts/
 RUN chmod +x /workspace/scripts/*.sh \
     && ls -la /workspace/scripts \
-    && ln -sf /workspace/scripts/nat_network_analysis.sh /usr/local/bin/nat-net \
-    && ln -sf /workspace/scripts/nat_analysis.sh /usr/local/bin/nat-analysis \
-    && ln -sf /workspace/scripts/master_diagnostic.sh /usr/local/bin/master-diag
+    && ln -sf /workspace/scripts/net_all.sh /usr/local/bin/net-all \
+    && ln -sf /workspace/scripts/00_net_info.sh /usr/local/bin/net-info \
+    && ln -sf /workspace/scripts/10_connectivity_check.sh /usr/local/bin/net-check \
+    && ln -sf /workspace/scripts/20_external_ip_check.sh /usr/local/bin/net-egress \
+    && ln -sf /workspace/scripts/30_firewall_path_check.sh /usr/local/bin/net-path
 
 # Set working directory
 WORKDIR /workspace

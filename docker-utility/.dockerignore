@@ -1,0 +1,21 @@
+# Exclude everything by default at repo root context not needed
+**/.git
+**/.github
+**/.vscode
+**/node_modules
+**/__pycache__
+
+# Ignore all scripts except new network-only ones
+scripts/*
+!scripts/00_net_info.sh
+!scripts/10_connectivity_check.sh
+!scripts/20_external_ip_check.sh
+!scripts/30_firewall_path_check.sh
+!scripts/net_all.sh
+
+# Always ignore scripts-archive from build context
+scripts-archive/**
+
+# Ignore local files
+*.log
+*.tmp
