@@ -11,7 +11,7 @@ on:
       job_name:
         description: 'Cloud Run Job name'
         required: true
-        default: 'utility-job'
+        default: 'utility-image'
       command:
         description: 'Container command to run (e.g., net-all, net-info, net-check, net-egress, net-path, sh)'
         required: false
@@ -30,7 +30,7 @@ on:
         default: 'storage.googleapis.com'
 
 env:
-  # Defaults (will be overridden dynamically from secrets.GCP_SA_KEY below)
+  # Defaults (overridden dynamically from secrets.GCP_SA_KEY)
   GCP_PROJECT_ID: gifted-palace-468618-q5
   GCP_SA_EMAIL: github-actions@gifted-palace-468618-q5.iam.gserviceaccount.com
   GCR_IMAGE: gcr.io/gifted-palace-468618-q5/utility-image
@@ -87,46 +87,50 @@ jobs:
           ARGS_FLAG+=("$ARGS_INPUT")
         fi
 
-        JOB_NAME='${{ github.event.inputs.job_name || 'utility-job' }}'
+        JOB_NAME='${{ github.event.inputs.job_name || 'utility-image' }}'
 
-        # Delete existing job if it exists
         if gcloud run jobs describe "$JOB_NAME" --region "${{ env.REGION }}" >/dev/null 2>&1; then
-          echo "Deleting existing job $JOB_NAME..."
-          gcloud run jobs delete "$JOB_NAME" \
+          echo "Updating existing job $JOB_NAME..."
+          gcloud run jobs update "$JOB_NAME" \
+            --image "${{ env.GCR_IMAGE }}:${{ github.sha }}" \
             --region "${{ env.REGION }}" \
-            --quiet
+            --set-env-vars "TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }},TARGET_DEST=${{ github.event.inputs.target_dest || 'storage.googleapis.com' }}" \
+            --command "${{ github.event.inputs.command || 'sh' }}" \
+            "${ARGS_FLAG[@]}" \
+            --cpu 1 \
+            --memory 512Mi \
+            --max-retries 0 \
+            --service-account "${{ env.GCP_SA_EMAIL }}"
         else
-          echo "Job $JOB_NAME not found; skip delete."
+          echo "Creating new job $JOB_NAME..."
+          gcloud run jobs create "$JOB_NAME" \
+            --image "${{ env.GCR_IMAGE }}:${{ github.sha }}" \
+            --region "${{ env.REGION }}" \
+            --set-env-vars "TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }},TARGET_DEST=${{ github.event.inputs.target_dest || 'storage.googleapis.com' }}" \
+            --command "${{ github.event.inputs.command || 'sh' }}" \
+            "${ARGS_FLAG[@]}" \
+            --cpu 1 \
+            --memory 512Mi \
+            --max-retries 0 \
+            --service-account "${{ env.GCP_SA_EMAIL }}"
         fi
-
-        # Create new job
-        gcloud run jobs create "$JOB_NAME" \
-          --image "${{ env.GCR_IMAGE }}:${{ github.sha }}" \
-          --region "${{ env.REGION }}" \
-          --set-env-vars "TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }},TARGET_DEST=${{ github.event.inputs.target_dest || 'storage.googleapis.com' }}" \
-          --command "${{ github.event.inputs.command || 'sh' }}" \
-          "${ARGS_FLAG[@]}" \
-          --cpu 1 \
-          --memory 512Mi \
-          --max-retries 0 \
-          --service-account "${{ env.GCP_SA_EMAIL }}"
 
     - name: Execute Cloud Run Job (optional)
       if: github.event_name == 'workflow_dispatch'
       run: |
-        gcloud run jobs execute ${{ github.event.inputs.job_name || 'utility-job' }} \
-          --region ${{ env.REGION }} \
+        gcloud run jobs execute "${{ github.event.inputs.job_name || 'utility-image' }}" \
+          --region "${{ env.REGION }}" \
           --wait
 
     - name: Get job execution logs
       if: github.event_name == 'workflow_dispatch'
       run: |
         EXECUTION_ID=$(gcloud run jobs executions list \
-          --region ${{ env.REGION }} \
-          --filter="job=${{ github.event.inputs.job_name || 'utility-job' }}" \
+          --region "${{ env.REGION }}" \
+          --filter="job=${{ github.event.inputs.job_name || 'utility-image' }}" \
           --limit=1 \
           --format="value(name)")
         if [ ! -z "$EXECUTION_ID" ]; then
-          gcloud run jobs executions logs read $EXECUTION_ID \
-            --region ${{ env.REGION }}
+          gcloud run jobs executions logs read "$EXECUTION_ID" \
+            --region "${{ env.REGION }}"
         fi
