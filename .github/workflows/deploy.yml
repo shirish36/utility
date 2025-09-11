@@ -87,22 +87,29 @@ jobs:
           ARGS_FLAG+=("$ARGS_INPUT")
         fi
 
+        JOB_NAME='${{ github.event.inputs.job_name || 'utility-job' }}'
+
         # Delete existing job if it exists
-        gcloud run jobs delete ${{ github.event.inputs.job_name || 'utility-job' }} \
-          --region ${{ env.REGION }} \
-          --quiet || true
+        if gcloud run jobs describe "$JOB_NAME" --region "${{ env.REGION }}" >/dev/null 2>&1; then
+          echo "Deleting existing job $JOB_NAME..."
+          gcloud run jobs delete "$JOB_NAME" \
+            --region "${{ env.REGION }}" \
+            --quiet
+        else
+          echo "Job $JOB_NAME not found; skip delete."
+        fi
 
         # Create new job
-        gcloud run jobs create ${{ github.event.inputs.job_name || 'utility-job' }} \
-          --image ${{ env.GCR_IMAGE }}:${{ github.sha }} \
-          --region ${{ env.REGION }} \
-          --set-env-vars TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }},TARGET_DEST=${{ github.event.inputs.target_dest || 'storage.googleapis.com' }} \
-          --command ${{ github.event.inputs.command || 'sh' }} \
+        gcloud run jobs create "$JOB_NAME" \
+          --image "${{ env.GCR_IMAGE }}:${{ github.sha }}" \
+          --region "${{ env.REGION }}" \
+          --set-env-vars "TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }},TARGET_DEST=${{ github.event.inputs.target_dest || 'storage.googleapis.com' }}" \
+          --command "${{ github.event.inputs.command || 'sh' }}" \
           "${ARGS_FLAG[@]}" \
           --cpu 1 \
           --memory 512Mi \
           --max-retries 0 \
-          --service-account ${{ env.GCP_SA_EMAIL }}
+          --service-account "${{ env.GCP_SA_EMAIL }}"
 
     - name: Execute Cloud Run Job (optional)
       if: github.event_name == 'workflow_dispatch'
