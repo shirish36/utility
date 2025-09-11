@@ -81,10 +81,18 @@ jobs:
     - name: Deploy to Cloud Run Jobs
       run: |
         ARGS_INPUT='${{ github.event.inputs.args }}'
+        COMMAND_INPUT='${{ github.event.inputs.command }}'
         ARGS_FLAG=()
         if [[ -n "$ARGS_INPUT" ]]; then
           ARGS_FLAG+=(--args)
           ARGS_FLAG+=("$ARGS_INPUT")
+        fi
+
+        # Default to net-all when no command input (e.g., push trigger)
+        if [[ -z "$COMMAND_INPUT" ]]; then
+          COMMAND="net-all"
+        else
+          COMMAND="$COMMAND_INPUT"
         fi
 
         JOB_NAME='${{ github.event.inputs.job_name || 'utility-image' }}'
@@ -95,7 +103,7 @@ jobs:
             --image "${{ env.GCR_IMAGE }}:${{ github.sha }}" \
             --region "${{ env.REGION }}" \
             --set-env-vars "TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }},TARGET_DEST=${{ github.event.inputs.target_dest || 'storage.googleapis.com' }}" \
-            --command "${{ github.event.inputs.command || 'sh' }}" \
+            --command "$COMMAND" \
             "${ARGS_FLAG[@]}" \
             --cpu 1 \
             --memory 512Mi \
@@ -107,7 +115,7 @@ jobs:
             --image "${{ env.GCR_IMAGE }}:${{ github.sha }}" \
             --region "${{ env.REGION }}" \
             --set-env-vars "TARGET_HOST=${{ github.event.inputs.target_host || 'google.com' }},TARGET_DEST=${{ github.event.inputs.target_dest || 'storage.googleapis.com' }}" \
-            --command "${{ github.event.inputs.command || 'sh' }}" \
+            --command "$COMMAND" \
             "${ARGS_FLAG[@]}" \
             --cpu 1 \
             --memory 512Mi \
