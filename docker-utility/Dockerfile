@@ -35,7 +35,11 @@ ENV OUTPUT_DIR=/data/out
 
 # Copy scripts and make them executable
 COPY scripts/ /workspace/scripts/
-RUN chmod +x /workspace/scripts/*.sh
+RUN chmod +x /workspace/scripts/*.sh \
+    && ls -la /workspace/scripts \
+    && ln -sf /workspace/scripts/nat_network_analysis.sh /usr/local/bin/nat-net \
+    && ln -sf /workspace/scripts/nat_analysis.sh /usr/local/bin/nat-analysis \
+    && ln -sf /workspace/scripts/master_diagnostic.sh /usr/local/bin/master-diag
 
 # Set working directory
 WORKDIR /workspace
