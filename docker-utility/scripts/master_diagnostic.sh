@@ -147,6 +147,7 @@ run_diagnostic "quick_firewall_test.sh" "QUICK FIREWALL TEST"
 run_diagnostic "cloud_logging_guide.sh" "CLOUD LOGGING GUIDE"
 run_diagnostic "system_info.sh" "SYSTEM INFORMATION"
 run_diagnostic "multi_command_test.sh" "MULTI-COMMAND TEST"
+run_diagnostic "nat_network_analysis.sh" "NAT NETWORK ANALYSIS (NETWORK-ONLY)"
 
 # Final summary
 echo "=================================================================================="
