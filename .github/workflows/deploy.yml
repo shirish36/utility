@@ -123,6 +123,20 @@ jobs:
             --service-account "${{ env.GCP_SA_EMAIL }}"
         fi
 
+    - name: Show job network config
+      run: |
+        JOB_NAME='${{ github.event.inputs.job_name || 'utility-image' }}'
+        REGION='${{ env.REGION }}'
+        echo "Job: $JOB_NAME | Region: $REGION"
+        CONN=$(gcloud run jobs describe "$JOB_NAME" --region "$REGION" --format="value(template.template.vpcAccess.connector)")
+        EGRESS=$(gcloud run jobs describe "$JOB_NAME" --region "$REGION" --format="value(template.template.vpcAccess.egress)")
+        echo "vpcAccess.connector: ${CONN:-<none>}"
+        echo "vpcAccess.egress:    ${EGRESS:-<unset>}"
+        if [ -n "$CONN" ]; then
+          echo "Connector details:"
+          gcloud compute networks vpc-access connectors describe "$CONN" --region "$REGION" --format="table(name,network,subnet,ipCidrRange,state)"
+        fi
+
     - name: Execute Cloud Run Job (optional)
       if: github.event_name == 'workflow_dispatch'
       run: |
